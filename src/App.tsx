@@ -8,6 +8,8 @@ import ModulePage from './pages/Module'
 import Lesson from './pages/Lesson'
 import Quiz from './pages/Quiz'
 import Achievements from './pages/Achievements'
+import Paths from './pages/Paths'
+import PathDetail from './pages/PathDetail'
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
         }
       >
         <Route path="/" element={<Dashboard />} />
+        <Route path="/paths" element={<Paths />} />
+        <Route path="/paths/:pathId" element={<PathDetail />} />
         <Route path="/track/:levelId" element={<Track />} />
         <Route path="/module/:levelId/:moduleId" element={<ModulePage />} />
         <Route path="/lesson/:levelId/:moduleId/:lessonId" element={<Lesson />} />

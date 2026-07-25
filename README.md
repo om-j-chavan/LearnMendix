@@ -13,7 +13,9 @@ An interactive, gamified web app for learning the **Mendix certification path** 
 - **Smart-mix depth** — full tutorial-style lessons for hard topics, tight revision cards for the basics.
 - **Gamification**: XP + levels with rank titles, a 🔥 daily streak, 15 unlockable **badges**, level-up and badge celebration modals, and confetti on a quiz pass.
 - **Quizzes**: one question at a time with instant feedback and explanations; 75% to pass (the real Intermediate exam bar), which unlocks the next module.
-- **Progress is saved locally** in your browser (`localStorage`) — no account, no server, fully offline after first load.
+- **Accounts & multi-tenant isolation** — sign up / log in (SHA-256 hashed passwords, min 1 character). Each account's XP, streak, badges and quiz scores live in an isolated, per-user `localStorage` namespace, so data never leaks between accounts in the same browser.
+- **Mendix Learning Paths catalog** — a browsable map of the real Mendix Academy taxonomy (5 skill levels, every learning path, with module lists) that links out to the official Academy content. Path/module titles are factual structure; descriptions and lessons here are original.
+- **Progress is saved locally** in your browser (`localStorage`) — no server, fully offline after first load.
 - **Neon / gamer UI** with animated background, glow effects, smooth page transitions and optional sound effects.
 
 ### Content status (Phase 1)

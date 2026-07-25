@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Trophy, Volume2, VolumeX, RotateCcw, LogOut } from 'lucide-react'
+import { Home, Trophy, Volume2, VolumeX, RotateCcw, LogOut, Map } from 'lucide-react'
 import XPBar from './XPBar'
 import StreakFlame from './StreakFlame'
 import { useProgress } from '../store/useProgress'
@@ -49,6 +49,13 @@ export default function TopBar() {
             title="Home"
           >
             <Home size={18} />
+          </Link>
+          <Link
+            to="/paths"
+            className={`btn-ghost !px-2.5 !py-2 ${loc.pathname.startsWith('/paths') ? '!bg-white/15 !text-white' : ''}`}
+            title="Mendix Learning Paths"
+          >
+            <Map size={18} />
           </Link>
           <Link
             to="/achievements"
