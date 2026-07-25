@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Badge, LevelId } from '../types'
+import { getActiveUserId, onSessionChange } from './session'
 import {
   PASS,
   XP_LESSON,
@@ -43,6 +44,19 @@ const EMPTY: ProgressSnapshot & { sound: boolean; lastVisited: null } = {
 
 function snapshot(s: ProgressState): ProgressSnapshot {
   return { xp: s.xp, streak: s.streak, doneLessons: s.doneLessons, quizBest: s.quizBest, badges: s.badges }
+}
+
+/**
+ * Per-user (multi-tenant) storage: every progress key is suffixed with the
+ * active account id, so accounts never share XP / streak / badges / scores —
+ * even in the same browser. Switching users reloads the correct namespace.
+ */
+const PROGRESS_KEY = 'learnmendix-progress-v1'
+const nsKey = () => `${PROGRESS_KEY}::${getActiveUserId()}`
+const namespacedStorage = {
+  getItem: () => localStorage.getItem(nsKey()),
+  setItem: (_name: string, value: string) => localStorage.setItem(nsKey(), value),
+  removeItem: () => localStorage.removeItem(nsKey()),
 }
 
 export const useProgress = create<ProgressState>()(
@@ -100,7 +114,8 @@ export const useProgress = create<ProgressState>()(
       resetProgress: () => set({ ...EMPTY, hydrated: true }),
     }),
     {
-      name: 'learnmendix-progress-v1',
+      name: PROGRESS_KEY,
+      storage: createJSONStorage(() => namespacedStorage),
       partialize: (s) => ({
         xp: s.xp,
         streak: s.streak,
@@ -116,3 +131,15 @@ export const useProgress = create<ProgressState>()(
     },
   ),
 )
+
+// When the signed-in account changes, load that account's namespace. If the
+// account has saved data, rehydrate it (never write empty state first, which
+// would clobber it). If it has none yet, reset in-memory state to empty.
+onSessionChange(() => {
+  const hasSaved = localStorage.getItem(nsKey()) != null
+  if (hasSaved) {
+    void useProgress.persist.rehydrate()
+  } else {
+    useProgress.setState({ ...EMPTY, hydrated: true })
+  }
+})

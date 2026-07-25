@@ -65,6 +65,16 @@ body {
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
   }
+  .auth-input {
+    @apply w-full rounded-xl bg-ink-900/70 border border-white/10 px-3.5 py-2.5 text-[15px] text-white outline-none transition-all;
+  }
+  .auth-input:focus {
+    @apply border-neon-cyan/70;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+  }
+  .auth-input::placeholder {
+    @apply text-white/30;
+  }
 }
 
 /* Lesson content (rendered from HTML strings) */

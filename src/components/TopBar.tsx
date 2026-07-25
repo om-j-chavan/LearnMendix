@@ -1,17 +1,21 @@
-import { Link, useLocation } from 'react-router-dom'
-import { Home, Trophy, Volume2, VolumeX, RotateCcw } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Home, Trophy, Volume2, VolumeX, RotateCcw, LogOut } from 'lucide-react'
 import XPBar from './XPBar'
 import StreakFlame from './StreakFlame'
 import { useProgress } from '../store/useProgress'
 import { useFx } from '../store/useFx'
+import { useAuth, useCurrentUser } from '../store/useAuth'
 import { play } from '../lib/sound'
 
 export default function TopBar() {
   const loc = useLocation()
+  const nav = useNavigate()
   const sound = useProgress((s) => s.sound)
   const toggleSound = useProgress((s) => s.toggleSound)
   const resetProgress = useProgress((s) => s.resetProgress)
   const toast = useFx((s) => s.toast)
+  const user = useCurrentUser()
+  const logout = useAuth((s) => s.logout)
 
   const onAch = loc.pathname.startsWith('/achievements')
 
@@ -75,6 +79,29 @@ export default function TopBar() {
           >
             <RotateCcw size={18} />
           </button>
+
+          {user && (
+            <div className="flex items-center gap-1.5 pl-1.5 ml-0.5 border-l border-white/10">
+              <div
+                className="grid place-items-center rounded-full w-8 h-8 font-display font-bold text-sm text-ink-950 shrink-0"
+                style={{ background: 'linear-gradient(135deg,#22d3ee,#a855f7)' }}
+                title={`${user.name} · ${user.email}`}
+              >
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <span className="hidden lg:block text-sm text-white/70 font-semibold max-w-[120px] truncate">{user.name.split(' ')[0]}</span>
+              <button
+                className="btn-ghost !px-2.5 !py-2"
+                title="Sign out"
+                onClick={() => {
+                  logout()
+                  nav('/login', { replace: true })
+                }}
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
