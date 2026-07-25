@@ -21,10 +21,12 @@ An interactive, gamified web app for learning the **Mendix certification path** 
 ### Content status (Phase 1)
 | Track | Status |
 |-------|--------|
-| 🚀 Rapid Developer | ✅ Full — 6 modules, lessons + quizzes |
-| 🎯 Intermediate Developer | ✅ Full — 8 modules (exam blueprint), lessons + quizzes |
-| 🧠 Advanced Developer | 🔓 Preview — module outlines (full content in Phase 2) |
+| 🚀 Rapid Developer | ✅ Full — 6 modules + **Rapid Revision**, lessons + quizzes |
+| 🎯 Intermediate Developer | ✅ Full — 8 modules (exam blueprint) + **Intermediate Revision (Exam Prep)** |
+| 🧠 Advanced Developer | ✅ Full — 6 modules (integration, Java, workflows, performance, security, CI/CD) + **Advanced Revision** |
 | 👑 Expert Developer | 🔓 Preview — module outlines (full content in Phase 3) |
+
+Every fully-authored stage ends with a **Revision** module: tight recap cards for each topic plus a mixed quiz to self-test before the real exam.
 
 ---
 
