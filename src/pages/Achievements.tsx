@@ -8,8 +8,8 @@ import { levelProgress } from '../lib/selectors'
 import { accentHex } from '../lib/ui'
 
 export default function Achievements() {
-  const { xp, streak, doneLessons, quizBest, badges } = useProgress()
-  const stats = computeStats({ xp, streak, doneLessons, quizBest, badges })
+  const { xp, streak, doneLessons, quizBest, badges, examBest } = useProgress()
+  const stats = computeStats({ xp, streak, doneLessons, quizBest, badges, examBest })
   const info = levelInfo(xp)
   const earned = BADGES.filter((b) => badges[b.id]).length
 

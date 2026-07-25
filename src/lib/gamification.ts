@@ -73,6 +73,7 @@ export interface ProgressSnapshot {
   doneLessons: Record<string, true>
   quizBest: Record<string, number>
   badges: Record<string, true>
+  examBest: number
 }
 
 export interface Stats {
@@ -84,6 +85,7 @@ export interface Stats {
   totalLessons: number
   lessonPct: number
   streak: number
+  examBest: number
 }
 
 export function computeStats(s: ProgressSnapshot): Stats {
@@ -102,6 +104,7 @@ export function computeStats(s: ProgressSnapshot): Stats {
     totalLessons,
     lessonPct: totalLessons ? doneCount / totalLessons : 0,
     streak: s.streak.count,
+    examBest: s.examBest ?? 0,
   }
 }
 
@@ -129,6 +132,8 @@ export const BADGES: BadgeDef[] = [
   { id: 'flame-14', name: 'Unstoppable', desc: 'Reach a 14-day streak', icon: '⚡', accent: 'magenta', earned: (s) => s.streak >= 14 },
   { id: 'level-5', name: 'Engineer', desc: 'Reach level 5', icon: '⭐', accent: 'cyan', earned: (s) => s.level >= 5 },
   { id: 'level-10', name: 'Architect', desc: 'Reach level 10', icon: '🌟', accent: 'purple', earned: (s) => s.level >= 10 },
+  { id: 'mock-pass', name: 'Exam Ready', desc: 'Pass a mock exam (75%+)', icon: '🎓', accent: 'lime', earned: (s) => s.examBest >= 75 },
+  { id: 'mock-ace', name: 'Exam Ace', desc: 'Score 90%+ on a mock exam', icon: '🏆', accent: 'amber', earned: (s) => s.examBest >= 90 },
 ]
 
 export const BADGE_BY_ID = Object.fromEntries(BADGES.map((b) => [b.id, b])) as Record<string, BadgeDef>

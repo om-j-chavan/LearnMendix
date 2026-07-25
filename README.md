@@ -15,6 +15,7 @@ An interactive, gamified web app for learning the **Mendix certification path** 
 - **Quizzes**: one question at a time with instant feedback and explanations; 75% to pass (the real Intermediate exam bar), which unlocks the next module.
 - **Accounts & multi-tenant isolation** — sign up / log in (SHA-256 hashed passwords, min 1 character). Each account's XP, streak, badges and quiz scores live in an isolated, per-user `localStorage` namespace, so data never leaks between accounts in the same browser.
 - **Mendix Learning Paths catalog** — a browsable map of the real Mendix Academy taxonomy (5 skill levels, every learning path, with module lists) that links out to the official Academy content. Path/module titles are factual structure; descriptions and lessons here are original.
+- **Timed mock exam** — a full simulation of the real Intermediate exam: **50 questions, a 90-minute countdown, 75% to pass**, weighted by the real module blueprint, with a question navigator, flag-for-review, auto-submit on timeout, and a per-module results breakdown. Questions are **original practice items that mirror the exam** — not the confidential real ones — reshuffled every attempt from an 80-question pool.
 - **Progress is saved locally** in your browser (`localStorage`) — no server, fully offline after first load.
 - **Neon / gamer UI** with animated background, glow effects, smooth page transitions and optional sound effects.
 

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Flame, BookOpen, CheckCircle2, Trophy, Play, Lock, ArrowRight, Map } from 'lucide-react'
+import { Flame, BookOpen, CheckCircle2, Trophy, Play, Lock, ArrowRight, Map, GraduationCap } from 'lucide-react'
 import { COURSES } from '../data/courses'
 import { MENDIX_PATHS, totalMendixPaths } from '../data/mendixPaths'
 import { useProgress } from '../store/useProgress'
@@ -10,8 +10,8 @@ import ProgressRing from '../components/ProgressRing'
 
 export default function Dashboard() {
   const nav = useNavigate()
-  const { xp, streak, doneLessons, quizBest, badges, lastVisited } = useProgress()
-  const stats = computeStats({ xp, streak, doneLessons, quizBest, badges })
+  const { xp, streak, doneLessons, quizBest, badges, lastVisited, examBest } = useProgress()
+  const stats = computeStats({ xp, streak, doneLessons, quizBest, badges, examBest })
   const info = levelInfo(xp)
   const target = continueTarget(doneLessons, quizBest, lastVisited)
   const badgeCount = Object.keys(badges).length
@@ -98,6 +98,19 @@ export default function Dashboard() {
           <p className="text-white/55 text-sm">The real Academy journey — {MENDIX_PATHS.length} skill levels mapped end to end, so you always know what to learn next.</p>
         </div>
         <span className="btn-ghost shrink-0"><Map size={16} /> Explore</span>
+      </Link>
+
+      {/* Mock exam */}
+      <Link to="/exam" className="glass card-hover p-5 flex items-center gap-4 group" style={{ display: 'flex', boxShadow: '0 0 24px rgba(168,85,247,.15)' }}>
+        <div className="grid place-items-center rounded-2xl w-14 h-14 shrink-0 text-3xl" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(168,85,247,.5)' }}>🎓</div>
+        <div className="flex-1">
+          <div className="font-display font-bold text-lg flex items-center gap-2">
+            Mock Exam
+            {examBest > 0 && <span className="chip border" style={{ background: examBest >= 75 ? 'rgba(163,230,53,.15)' : 'rgba(245,158,11,.15)', color: examBest >= 75 ? '#a3e635' : '#f59e0b', borderColor: examBest >= 75 ? 'rgba(163,230,53,.3)' : 'rgba(245,158,11,.3)' }}>best {examBest}%</span>}
+          </div>
+          <p className="text-white/55 text-sm">Full exam simulation — 50 questions, 90-minute timer, 75% to pass. Weighted like the real Intermediate exam.</p>
+        </div>
+        <span className="btn-ghost shrink-0"><GraduationCap size={16} /> Start</span>
       </Link>
 
       {/* Tracks */}

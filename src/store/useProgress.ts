@@ -27,6 +27,7 @@ interface ProgressState extends ProgressSnapshot {
 
   completeLesson: (lessonId: string) => ActionResult
   submitQuiz: (moduleId: string, pct: number) => ActionResult & { passed: boolean; best: number }
+  recordExam: (pct: number) => ActionResult & { passed: boolean; best: number }
   setLastVisited: (levelId: LevelId, moduleId: string) => void
   toggleSound: () => void
   resetProgress: () => void
@@ -38,12 +39,20 @@ const EMPTY: ProgressSnapshot & { sound: boolean; lastVisited: null } = {
   doneLessons: {},
   quizBest: {},
   badges: {},
+  examBest: 0,
   sound: false,
   lastVisited: null,
 }
 
 function snapshot(s: ProgressState): ProgressSnapshot {
-  return { xp: s.xp, streak: s.streak, doneLessons: s.doneLessons, quizBest: s.quizBest, badges: s.badges }
+  return {
+    xp: s.xp,
+    streak: s.streak,
+    doneLessons: s.doneLessons,
+    quizBest: s.quizBest,
+    badges: s.badges,
+    examBest: s.examBest,
+  }
 }
 
 /**
@@ -81,7 +90,7 @@ export const useProgress = create<ProgressState>()(
         const xp = s.xp + XP_LESSON
         const doneLessons = { ...s.doneLessons, [lessonId]: true as const }
         const streak = nextStreak(s.streak)
-        const draft: ProgressSnapshot = { xp, streak, doneLessons, quizBest: s.quizBest, badges: s.badges }
+        const draft: ProgressSnapshot = { xp, streak, doneLessons, quizBest: s.quizBest, badges: s.badges, examBest: s.examBest }
         const newBadges = newlyEarnedBadges(draft)
         const badges = { ...s.badges }
         newBadges.forEach((b) => (badges[b.id] = true))
@@ -100,12 +109,37 @@ export const useProgress = create<ProgressState>()(
         const xp = s.xp + xpGained
         const quizBest = { ...s.quizBest, [moduleId]: best }
         const streak = nextStreak(s.streak)
-        const draft: ProgressSnapshot = { xp, streak, doneLessons: s.doneLessons, quizBest, badges: s.badges }
+        const draft: ProgressSnapshot = { xp, streak, doneLessons: s.doneLessons, quizBest, badges: s.badges, examBest: s.examBest }
         const newBadges = newlyEarnedBadges(draft)
         const badges = { ...s.badges }
         newBadges.forEach((b) => (badges[b.id] = true))
         const to = levelInfo(xp).level
         set({ xp, quizBest, streak, badges })
+        return { xpGained, leveledFrom: from, leveledTo: to, newBadges, passed: pct >= PASS, best }
+      },
+
+      recordExam: (pct) => {
+        const s = get()
+        const from = levelInfo(s.xp).level
+        const prevBest = s.examBest
+        const best = Math.max(prevBest, pct)
+        // exams are big — reward improvement generously
+        const xpGained = Math.max(0, Math.round((best - prevBest) * 1.5))
+        const xp = s.xp + xpGained
+        const streak = nextStreak(s.streak)
+        const draft: ProgressSnapshot = {
+          xp,
+          streak,
+          doneLessons: s.doneLessons,
+          quizBest: s.quizBest,
+          badges: s.badges,
+          examBest: best,
+        }
+        const newBadges = newlyEarnedBadges(draft)
+        const badges = { ...s.badges }
+        newBadges.forEach((b) => (badges[b.id] = true))
+        const to = levelInfo(xp).level
+        set({ xp, examBest: best, streak, badges })
         return { xpGained, leveledFrom: from, leveledTo: to, newBadges, passed: pct >= PASS, best }
       },
 
@@ -122,6 +156,7 @@ export const useProgress = create<ProgressState>()(
         doneLessons: s.doneLessons,
         quizBest: s.quizBest,
         badges: s.badges,
+        examBest: s.examBest,
         sound: s.sound,
         lastVisited: s.lastVisited,
       }),
