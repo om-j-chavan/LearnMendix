@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, Check, X, RotateCcw, ArrowRight, Trophy, PartyPopper } from 'lucide-react'
-import { findModule, LEVEL_BY_ID } from '../data/courses'
+import { findModule } from '../data/courses'
+import { generateRevisionQuiz, isRevisionModule } from '../data/revisionPools'
 import { useProgress } from '../store/useProgress'
 import { useCelebrate } from '../lib/useCelebrate'
 import { PASS } from '../lib/gamification'
+import type { QuizQuestion } from '../types'
 import { accentHex } from '../lib/ui'
 import { bigCelebrate } from '../lib/fx'
 import { play } from '../lib/sound'
@@ -18,14 +20,17 @@ export default function Quiz() {
   const sound = useProgress((s) => s.sound)
   const celebrate = useCelebrate()
 
-  const total = module?.quiz.length ?? 0
+  const [questions, setQuestions] = useState<QuizQuestion[]>(() =>
+    module ? (isRevisionModule(module.id) ? generateRevisionQuiz(levelId ?? '') : module.quiz) : [],
+  )
+  const total = questions.length
   const [current, setCurrent] = useState(0)
-  const [selected, setSelected] = useState<(number | null)[]>(() => Array(total).fill(null))
+  const [selected, setSelected] = useState<(number | null)[]>(() => Array(questions.length).fill(null))
   const [phase, setPhase] = useState<'quiz' | 'results'>('quiz')
   const submittedRef = useRef(false)
   const [result, setResult] = useState<{ pct: number; passed: boolean; xp: number; best: number } | null>(null)
 
-  const correctCount = selected.reduce<number>((n, sel, i) => n + (sel === module?.quiz[i].correct ? 1 : 0), 0)
+  const correctCount = selected.reduce<number>((n, sel, i) => n + (sel === questions[i]?.correct ? 1 : 0), 0)
   const pct = total ? Math.round((correctCount / total) * 100) : 0
 
   useEffect(() => {
@@ -50,7 +55,8 @@ export default function Quiz() {
   }
 
   const accent = accentHex(module.accent)
-  const q = module.quiz[current]
+  const isRev = isRevisionModule(module.id)
+  const q = questions[current]
   const answered = selected[current] !== null
   const isCorrect = selected[current] === q.correct
 
@@ -70,7 +76,10 @@ export default function Quiz() {
   function retake() {
     submittedRef.current = false
     setResult(null)
-    setSelected(Array(total).fill(null))
+    // Revision quizzes are re-generated fresh (new random questions) each retake.
+    const fresh = isRev ? generateRevisionQuiz(levelId ?? '') : questions
+    setQuestions(fresh)
+    setSelected(Array(fresh.length).fill(null))
     setCurrent(0)
     setPhase('quiz')
   }
@@ -122,7 +131,7 @@ export default function Quiz() {
         {/* review */}
         <div className="mt-5 space-y-2">
           <div className="text-[11px] uppercase tracking-widest text-white/40 mb-1">Review</div>
-          {module.quiz.map((qq, i) => {
+          {questions.map((qq, i) => {
             const ok = selected[i] === qq.correct
             return (
               <div key={i} className="glass p-3 text-sm">

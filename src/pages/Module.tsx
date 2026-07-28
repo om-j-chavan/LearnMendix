@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Check, BookOpen, Zap, ClipboardCheck, Award, ChevronRight } from 'lucide-react'
 import { findModule } from '../data/courses'
+import { isRevisionModule, REVISION_SIZE } from '../data/revisionPools'
 import { useProgress } from '../store/useProgress'
 import { moduleLessonProgress } from '../lib/selectors'
 import { PASS } from '../lib/gamification'
@@ -32,6 +33,7 @@ export default function ModulePage() {
   const best = quizBest[module.id]
   const passed = best != null && best >= PASS
   const hasQuiz = module.quiz.length > 0
+  const isRev = isRevisionModule(module.id)
 
   return (
     <div>
@@ -96,13 +98,13 @@ export default function ModulePage() {
             {passed ? <Award size={26} /> : <ClipboardCheck size={26} />}
           </div>
           <div className="flex-1">
-            <div className="font-display font-bold text-lg">{passed ? 'Quiz passed 🎉' : 'Module Quiz'}</div>
+            <div className="font-display font-bold text-lg">{passed ? 'Quiz passed 🎉' : isRev ? 'Revision Quiz' : 'Module Quiz'}</div>
             <div className="text-white/55 text-sm">
-              {module.quiz.length} questions · need {PASS}% to pass
+              {isRev ? `${REVISION_SIZE} random questions each time · always available` : `${module.quiz.length} questions`} · need {PASS}% to pass
               {best != null && <> · best score <b style={{ color: passed ? '#a3e635' : '#f59e0b' }}>{best}%</b></>}
             </div>
           </div>
-          <span className="btn-primary shrink-0">{best != null ? 'Retake' : 'Start quiz'} →</span>
+          <span className="btn-primary shrink-0">{best != null ? 'Retake' : isRev ? 'Start revision' : 'Start quiz'} →</span>
         </Link>
       ) : (
         <div className="glass p-5 text-white/50 text-sm text-center">

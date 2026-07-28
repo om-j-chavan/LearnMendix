@@ -27,7 +27,7 @@ An interactive, gamified web app for learning the **Mendix certification path** 
 | 🧠 Advanced Developer | ✅ Full — 6 modules (integration, Java, workflows, performance, security, CI/CD) + **Advanced Revision** |
 | 👑 Expert Developer | 🔓 Preview — module outlines (full content in Phase 3) |
 
-Every fully-authored stage ends with a **Revision** module: tight recap cards for each topic plus a mixed quiz to self-test before the real exam.
+Every fully-authored stage ends with a **Revision** module — **always unlocked** (jump in any time) with a **randomly generated** mixed quiz that draws fresh questions and shuffles answer positions on every attempt, so you can self-test repeatedly before the real exam.
 
 ---
 

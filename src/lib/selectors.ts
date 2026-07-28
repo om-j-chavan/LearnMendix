@@ -7,6 +7,8 @@ type Best = Record<string, number>
 
 export function isModuleUnlocked(level: Level, idx: number, quizBest: Best): boolean {
   if (level.status === 'preview') return true
+  // Revision modules are always available — jump in to self-test any time.
+  if (level.modules[idx]?.id.endsWith('-revision')) return true
   if (idx === 0) return true
   const prev = level.modules[idx - 1]
   if (!prev || prev.quiz.length === 0) return true

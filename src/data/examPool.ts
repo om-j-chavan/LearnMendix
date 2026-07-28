@@ -184,3 +184,8 @@ export function generateExam(): ExamQuestion[] {
 export function poolCount(): number {
   return POOL.length
 }
+
+/** All exam questions as ready-to-render quiz questions (options shuffled). */
+export function allExamQuestions(): ExamQuestion[] {
+  return POOL.map(build)
+}
