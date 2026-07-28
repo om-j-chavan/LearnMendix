@@ -14,6 +14,8 @@
  * weighted by the community-reported module blueprint.
  */
 
+import type { QuizQuestion } from '../types'
+
 export type ExamModule =
   | 'Domain Model'
   | 'Security'
@@ -277,9 +279,37 @@ export interface ExamQuestion {
   m: ExamModule
   q: string
   options: string[]
-  correct: number
+  /** indices of the correct option(s); more than one when `multi` is true */
+  correct: number[]
+  multi: boolean
   why: string
 }
+
+/** Multi-select ("choose all that apply") seed: two or more correct answers. */
+interface MultiSeed {
+  m: ExamModule
+  q: string
+  correct: string[]
+  wrong: string[]
+  why: string
+}
+
+const MULTI: MultiSeed[] = [
+  { m: 'Microflows', q: 'Which of these are valid list operations? (Select all that apply.)', correct: ['Union', 'Intersect', 'Sort'], wrong: ['Merge', 'Combine'], why: 'Union, Intersect and Sort (plus Subtract, Contains, Find, Filter, Head, Tail) are list operations; Merge and Combine are not.' },
+  { m: 'Microflows', q: 'Which of these activities interact with the database? (Select all that apply.)', correct: ['Create object', 'Commit object', 'Retrieve'], wrong: ['Show page', 'Change variable'], why: 'Create, Commit, Retrieve (and Delete, Rollback) touch the database; Show page and Change variable do not.' },
+  { m: 'Microflows', q: 'Which activities can be used inside a loop? (Select all that apply.)', correct: ['Retrieve object', 'Change object', 'Aggregate list'], wrong: ['Start event', 'End event'], why: 'Ordinary activities work in a loop; Start and End events cannot be placed inside one.' },
+  { m: 'Microflows', q: 'Which are valid microflow error-handling options? (Select all that apply.)', correct: ['Rollback', 'Custom with rollback', 'Custom without rollback', 'Continue'], wrong: ['Retry and log'], why: 'The four options are Rollback, Custom with rollback, Custom without rollback and Continue.' },
+  { m: 'Agile', q: 'Which of these are Scrum events? (Select all that apply.)', correct: ['Sprint Planning', 'Sprint Review', 'Sprint Retrospective'], wrong: ['Backlog Review', 'User Story Session'], why: 'The events are Sprint Planning, the Daily Scrum, the Sprint Review and the Sprint Retrospective.' },
+  { m: 'Agile', q: 'Who are members of the Scrum team? (Select all that apply.)', correct: ['Product Owner', 'Scrum Master', 'Developers'], wrong: ['Stakeholders', 'Subject Matter Experts'], why: 'The Scrum team is the Product Owner, the Scrum Master and the Developers.' },
+  { m: 'Domain Model', q: 'Which of these are Mendix system members of an entity? (Select all that apply.)', correct: ['createdDate', 'changedDate', 'owner', 'changedBy'], wrong: ['version'], why: 'System members include createdDate, changedDate, owner and changedBy.' },
+  { m: 'Domain Model', q: 'Which are valid delete-behavior options on an association? (Select all that apply.)', correct: ['Keep the associated objects', 'Delete the associated objects too', 'Delete only if not associated'], wrong: ['Archive the associated objects'], why: 'The three options are keep, cascade delete, and prevent (delete only if not associated).' },
+  { m: 'XPath', q: 'Which of these are valid XPath operators? (Select all that apply.)', correct: ['=', '!=', 'or'], wrong: ['==', 'xor'], why: 'Valid operators include =, !=, <, <=, >, >=, and, or; == and xor are not XPath operators.' },
+  { m: 'XPath', q: 'Which of these are XPath tokens? (Select all that apply.)', correct: ['//', '[ ]', '( )'], wrong: ['{ }'], why: '//, ., /, [ ] and ( ) are XPath tokens; { } is not.' },
+  { m: 'XPath', q: 'Which of these are XPath constraint functions? (Select all that apply.)', correct: ['contains', 'starts-with', 'ends-with'], wrong: ['includes', 'matches'], why: 'contains, starts-with, ends-with, not, true and false are constraint functions; includes and matches are not.' },
+  { m: 'Pages', q: 'What can a layout be used for? (Select all that apply.)', correct: ['Give a consistent structure across the app', 'Define placeholder areas that pages fill in'], wrong: ['Store application data', 'Enforce entity security'], why: 'Layouts provide reusable structure via placeholders; they do not store data or enforce security.' },
+  { m: 'Security', q: 'What can an entity access rule control? (Select all that apply.)', correct: ['Create/read/write/delete rights', 'Per-member read/write access', 'An XPath row constraint'], wrong: ['Which pages appear in the navigation menu'], why: 'Access rules control object rights, member access and an XPath row filter — not menu visibility.' },
+  { m: 'Modules', q: 'What can a module contain? (Select all that apply.)', correct: ['A domain model', 'Pages and microflows', 'Module roles'], wrong: ['The app-level user roles'], why: 'A module has its own domain model, documents and module roles; user roles live at app level.' },
+]
 
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice()
@@ -290,34 +320,48 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function build(seed: Seed): ExamQuestion {
+function buildSingle(seed: Seed): ExamQuestion {
   const options = shuffle([seed.a, ...seed.d])
-  return { m: seed.m, q: seed.q, options, correct: options.indexOf(seed.a), why: seed.why }
+  return { m: seed.m, q: seed.q, options, correct: [options.indexOf(seed.a)], multi: false, why: seed.why }
 }
 
-/** Generate a fresh, blueprint-weighted 50-question exam with shuffled options. */
+function buildMulti(seed: MultiSeed): ExamQuestion {
+  const options = shuffle([...seed.correct, ...seed.wrong])
+  const correct = seed.correct.map((c) => options.indexOf(c)).sort((a, b) => a - b)
+  return { m: seed.m, q: seed.q, options, correct, multi: true, why: seed.why }
+}
+
+type Item = { m: ExamModule; make: () => ExamQuestion }
+const ITEMS: Item[] = [
+  ...POOL.map((s) => ({ m: s.m, make: () => buildSingle(s) })),
+  ...MULTI.map((s) => ({ m: s.m, make: () => buildMulti(s) })),
+]
+
+/** Generate a fresh, blueprint-weighted 50-question exam (mixed single + multi-select). */
 export function generateExam(): ExamQuestion[] {
-  const chosen: Seed[] = []
-  const used = new Set<Seed>()
+  const chosen: Item[] = []
+  const used = new Set<Item>()
   ;(Object.keys(BLUEPRINT) as ExamModule[]).forEach((mod) => {
-    const pool = shuffle(POOL.filter((s) => s.m === mod))
+    const pool = shuffle(ITEMS.filter((it) => it.m === mod))
     const take = pool.slice(0, BLUEPRINT[mod])
-    take.forEach((s) => used.add(s))
+    take.forEach((it) => used.add(it))
     chosen.push(...take)
   })
-  // top up if any module pool was short of its blueprint count
   if (chosen.length < EXAM.count) {
-    const rest = shuffle(POOL.filter((s) => !used.has(s)))
+    const rest = shuffle(ITEMS.filter((it) => !used.has(it)))
     chosen.push(...rest.slice(0, EXAM.count - chosen.length))
   }
-  return shuffle(chosen).slice(0, EXAM.count).map(build)
+  return shuffle(chosen).slice(0, EXAM.count).map((it) => it.make())
 }
 
 export function poolCount(): number {
-  return POOL.length
+  return POOL.length + MULTI.length
 }
 
-/** All exam questions as ready-to-render quiz questions (options shuffled). */
-export function allExamQuestions(): ExamQuestion[] {
-  return POOL.map(build)
+/** Single-answer questions for the revision pool (options shuffled). */
+export function allExamQuestions(): QuizQuestion[] {
+  return POOL.map((s) => {
+    const options = shuffle([s.a, ...s.d])
+    return { q: s.q, options, correct: options.indexOf(s.a), why: s.why }
+  })
 }

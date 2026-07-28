@@ -30,6 +30,11 @@ function fmt(s: number) {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+/** exact-match: selected set equals the correct set (all-or-nothing) */
+function setEq(a: number[], b: number[]) {
+  return a.length === b.length && a.every((x) => b.includes(x))
+}
+
 export default function Exam() {
   const nav = useNavigate()
   const recordExam = useProgress((s) => s.recordExam)
@@ -39,14 +44,14 @@ export default function Exam() {
 
   const [phase, setPhase] = useState<'intro' | 'running' | 'results'>('intro')
   const [questions, setQuestions] = useState<ExamQuestion[]>([])
-  const [answers, setAnswers] = useState<number[]>([])
+  const [answers, setAnswers] = useState<number[][]>([])
   const [marked, setMarked] = useState<Set<number>>(new Set())
   const [current, setCurrent] = useState(0)
   const [secondsLeft, setSecondsLeft] = useState(EXAM.minutes * 60)
   const [result, setResult] = useState<Result | null>(null)
   const submittedRef = useRef(false)
 
-  const answeredCount = answers.filter((a) => a >= 0).length
+  const answeredCount = answers.filter((a) => a && a.length > 0).length
 
   const submit = useCallback(() => {
     if (submittedRef.current) return
@@ -54,7 +59,7 @@ export default function Exam() {
     let correct = 0
     const byModule: Record<string, { correct: number; total: number }> = {}
     questions.forEach((q, i) => {
-      const ok = answers[i] === q.correct
+      const ok = setEq(answers[i] || [], q.correct)
       byModule[q.m] = byModule[q.m] || { correct: 0, total: 0 }
       byModule[q.m].total++
       if (ok) {
@@ -86,7 +91,7 @@ export default function Exam() {
   function start() {
     const qs = generateExam()
     setQuestions(qs)
-    setAnswers(Array(qs.length).fill(-1))
+    setAnswers(qs.map(() => []))
     setMarked(new Set())
     setCurrent(0)
     setSecondsLeft(EXAM.minutes * 60)
@@ -97,8 +102,16 @@ export default function Exam() {
 
   function choose(optIdx: number) {
     setAnswers((a) => {
-      const next = a.slice()
-      next[current] = optIdx
+      const next = a.map((x) => x.slice())
+      const cur = next[current] || []
+      if (questions[current].multi) {
+        const at = cur.indexOf(optIdx)
+        if (at >= 0) cur.splice(at, 1)
+        else cur.push(optIdx)
+        next[current] = cur
+      } else {
+        next[current] = [optIdx]
+      }
       return next
     })
   }
@@ -138,7 +151,7 @@ export default function Exam() {
             </div>
 
             <div className="text-left text-sm text-white/70 bg-white/5 border border-white/10 rounded-xl px-4 py-3 mt-6 space-y-1.5">
-              <div className="flex gap-2"><ListChecks size={16} className="text-neon-cyan shrink-0 mt-0.5" /><span>Questions are weighted by the real blueprint (Domain Model &amp; Security carry the most).</span></div>
+              <div className="flex gap-2"><ListChecks size={16} className="text-neon-cyan shrink-0 mt-0.5" /><span>Weighted by the real blueprint (Domain Model &amp; Security carry the most), with a mix of single-answer and <b>multi-select</b> (“select all that apply”) questions.</span></div>
               <div className="flex gap-2"><Clock size={16} className="text-neon-amber shrink-0 mt-0.5" /><span>A 90-minute timer counts down and auto-submits at zero. You can revisit and change answers, and flag questions for review.</span></div>
               <div className="flex gap-2"><AlertTriangle size={16} className="text-neon-pink shrink-0 mt-0.5" /><span>These are original practice questions that mirror the exam — not the confidential real items. Don’t refresh mid-exam or your progress resets.</span></div>
             </div>
@@ -205,8 +218,9 @@ export default function Exam() {
         <div className="mt-5 space-y-2">
           <div className="text-[11px] uppercase tracking-widest text-white/40 mb-1">Review — {result.total} questions</div>
           {questions.map((q, i) => {
-            const yours = answers[i]
-            const ok = yours === q.correct
+            const yours = answers[i] || []
+            const ok = setEq(yours, q.correct)
+            const correctText = q.correct.map((ci) => q.options[ci]).join('  ·  ')
             return (
               <div key={i} className="glass p-3.5 text-sm">
                 <div className="flex items-start gap-2">
@@ -214,10 +228,13 @@ export default function Exam() {
                     {ok ? <Check size={13} /> : <X size={13} />}
                   </span>
                   <div className="flex-1">
-                    <div className="font-semibold text-white/85"><span className="text-white/40 mr-1">{i + 1}.</span>{q.q}</div>
-                    {!ok && yours >= 0 && <div className="text-neon-red/90 mt-1">Your answer: {q.options[yours]}</div>}
-                    {!ok && yours < 0 && <div className="text-white/40 mt-1">Not answered</div>}
-                    <div className="text-white/60 mt-0.5"><b style={{ color: '#a3e635' }}>{q.options[q.correct]}</b> — {q.why}</div>
+                    <div className="font-semibold text-white/85">
+                      <span className="text-white/40 mr-1">{i + 1}.</span>{q.q}
+                      {q.multi && <span className="ml-2 text-[10px] uppercase tracking-wide text-neon-amber">multi</span>}
+                    </div>
+                    {!ok && yours.length > 0 && <div className="text-neon-red/90 mt-1">Your answer: {yours.map((yi) => q.options[yi]).join(', ')}</div>}
+                    {!ok && yours.length === 0 && <div className="text-white/40 mt-1">Not answered</div>}
+                    <div className="text-white/60 mt-0.5"><b style={{ color: '#a3e635' }}>{correctText}</b> — {q.why}</div>
                   </div>
                 </div>
               </div>
@@ -253,10 +270,15 @@ export default function Exam() {
               <span className="chip bg-neon-purple/15 text-neon-purple border border-neon-purple/30">{q.m}</span>
               <span className="text-xs text-white/45">Question {current + 1} of {questions.length}</span>
             </div>
-            <h2 className="font-display font-bold text-xl mb-4">{q.q}</h2>
+            <h2 className="font-display font-bold text-xl mb-1">{q.q}</h2>
+            {q.multi ? (
+              <div className="text-xs text-neon-amber mb-3 flex items-center gap-1.5"><ListChecks size={13} /> Select all that apply</div>
+            ) : (
+              <div className="mb-3" />
+            )}
             <div className="space-y-2.5">
               {q.options.map((opt, i) => {
-                const chosen = answers[current] === i
+                const chosen = (answers[current] || []).includes(i)
                 return (
                   <button
                     key={i}
@@ -264,8 +286,11 @@ export default function Exam() {
                     className="w-full text-left rounded-xl px-4 py-3 flex items-center gap-3 transition-all"
                     style={{ border: `1.5px solid ${chosen ? '#a855f7' : 'rgba(255,255,255,.12)'}`, background: chosen ? 'rgba(168,85,247,.12)' : 'rgba(255,255,255,.03)' }}
                   >
-                    <span className="grid place-items-center rounded-lg w-7 h-7 shrink-0 font-display font-bold text-sm" style={{ background: 'rgba(255,255,255,.06)', color: chosen ? '#a855f7' : '#9fb0d0' }}>
-                      {String.fromCharCode(65 + i)}
+                    <span
+                      className={`grid place-items-center w-7 h-7 shrink-0 font-display font-bold text-sm ${q.multi ? 'rounded-md' : 'rounded-lg'}`}
+                      style={{ background: chosen ? 'rgba(168,85,247,.28)' : 'rgba(255,255,255,.06)', color: chosen ? '#c99dff' : '#9fb0d0' }}
+                    >
+                      {chosen && q.multi ? <Check size={15} /> : String.fromCharCode(65 + i)}
                     </span>
                     <span className="text-[15px] text-white/85">{opt}</span>
                   </button>
@@ -297,7 +322,7 @@ export default function Exam() {
         <div className="text-[11px] uppercase tracking-widest text-white/40 mb-2 px-1">Question navigator</div>
         <div className="flex flex-wrap gap-1.5">
           {questions.map((_, i) => {
-            const answered = answers[i] >= 0
+            const answered = (answers[i] || []).length > 0
             const isMarked = marked.has(i)
             const isCurrent = i === current
             return (
