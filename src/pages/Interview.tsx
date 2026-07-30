@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft, Check, Circle, BookOpen, Wrench, Mic, ClipboardCheck,
-  Sparkles, MessageSquare, Star, HelpCircle, Briefcase,
+  Sparkles, MessageSquare, Star, HelpCircle, Briefcase, Lightbulb, MessagesSquare,
 } from 'lucide-react'
 import { PREP_DAYS, PREP_TOTAL, WEEKS, TOPIC_BANK, BEHAVIORAL, EDGE, ASK } from '../data/interviewPlan'
+import { INTERVIEW_QA, QA_TOTAL } from '../data/interviewQA'
 import { useProgress } from '../store/useProgress'
 import { useCelebrate } from '../lib/useCelebrate'
 
-type Tab = 'plan' | 'topics' | 'behavioral' | 'edge'
+type Tab = 'plan' | 'qa' | 'topics' | 'behavioral' | 'edge'
 
 export default function Interview() {
   const prepDays = useProgress((s) => s.prepDays ?? {})
@@ -52,6 +53,7 @@ export default function Interview() {
       {/* tabs */}
       <div className="flex gap-2 mb-5 flex-wrap">
         <TabBtn active={tab === 'plan'} onClick={() => setTab('plan')} icon={<ClipboardCheck size={15} />}>30-Day Plan</TabBtn>
+        <TabBtn active={tab === 'qa'} onClick={() => setTab('qa')} icon={<MessagesSquare size={15} />}>Q&amp;A ({QA_TOTAL})</TabBtn>
         <TabBtn active={tab === 'topics'} onClick={() => setTab('topics')} icon={<BookOpen size={15} />}>Topic Bank</TabBtn>
         <TabBtn active={tab === 'behavioral'} onClick={() => setTab('behavioral')} icon={<MessageSquare size={15} />}>Behavioral</TabBtn>
         <TabBtn active={tab === 'edge'} onClick={() => setTab('edge')} icon={<Star size={15} />}>Your Edge</TabBtn>
@@ -111,6 +113,41 @@ export default function Interview() {
                     </motion.div>
                   )
                 })}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {/* Q&A */}
+      {tab === 'qa' && (
+        <div className="space-y-6">
+          <div className="glass p-3 text-sm text-white/60 flex items-center gap-2">
+            <Lightbulb size={15} className="text-neon-amber shrink-0" /> Each question has a 📘 descriptive answer (to show depth) and a 💡 simple answer (to remember it). Tap to expand.
+          </div>
+          {INTERVIEW_QA.map((g) => (
+            <section key={g.area}>
+              <h2 className="font-display font-bold text-neon-cyan mb-2 flex items-center gap-2"><MessagesSquare size={16} /> {g.area}</h2>
+              <div className="space-y-2">
+                {g.qa.map((item, i) => (
+                  <details key={i} className="glass p-3 group">
+                    <summary className="cursor-pointer list-none flex items-center gap-2 font-semibold text-white/85">
+                      <HelpCircle size={15} className="text-neon-cyan shrink-0" />
+                      <span className="flex-1">{item.q}</span>
+                      <span className="text-white/30 text-xs group-open:rotate-180 transition-transform">▾</span>
+                    </summary>
+                    <div className="mt-3 space-y-2.5 text-sm">
+                      <div className="rounded-lg px-3 py-2" style={{ background: 'rgba(34,211,238,.08)', border: '1px solid rgba(34,211,238,.25)' }}>
+                        <div className="text-[11px] uppercase tracking-widest text-neon-cyan font-semibold mb-1 flex items-center gap-1.5"><BookOpen size={12} /> Descriptive answer</div>
+                        <div className="text-white/80">{item.descriptive}</div>
+                      </div>
+                      <div className="rounded-lg px-3 py-2" style={{ background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)' }}>
+                        <div className="text-[11px] uppercase tracking-widest text-neon-amber font-semibold mb-1 flex items-center gap-1.5"><Lightbulb size={12} /> In simple terms</div>
+                        <div className="text-white/80">{item.easy}</div>
+                      </div>
+                    </div>
+                  </details>
+                ))}
               </div>
             </section>
           ))}
