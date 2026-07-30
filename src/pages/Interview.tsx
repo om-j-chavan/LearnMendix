@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft, Check, Circle, BookOpen, Wrench, Mic, ClipboardCheck,
-  Sparkles, MessageSquare, Star, HelpCircle, Briefcase, Lightbulb, MessagesSquare,
+  Sparkles, MessageSquare, Star, HelpCircle, Briefcase, Lightbulb, MessagesSquare, Eye, EyeOff,
 } from 'lucide-react'
 import { PREP_DAYS, PREP_TOTAL, WEEKS, TOPIC_BANK, BEHAVIORAL, EDGE, ASK } from '../data/interviewPlan'
 import { INTERVIEW_QA, QA_TOTAL } from '../data/interviewQA'
@@ -17,6 +17,7 @@ export default function Interview() {
   const togglePrepDay = useProgress((s) => s.togglePrepDay)
   const celebrate = useCelebrate()
   const [tab, setTab] = useState<Tab>('plan')
+  const [showAnswers, setShowAnswers] = useState(false)
 
   const done = Object.keys(prepDays).length
   const pct = Math.round((done / PREP_TOTAL) * 100)
@@ -62,6 +63,15 @@ export default function Interview() {
       {/* PLAN */}
       {tab === 'plan' && (
         <div className="space-y-6">
+          <div className="flex items-center justify-end -mb-2">
+            <button
+              onClick={() => setShowAnswers((v) => !v)}
+              className="chip !px-3 !py-1.5 border bg-white/5 border-white/10 text-white/70 hover:text-white"
+              title="Reveal a short answer under each drill question"
+            >
+              {showAnswers ? <><EyeOff size={14} /> Hide answers</> : <><Eye size={14} /> Show answers</>}
+            </button>
+          </div>
           {WEEKS.map((wk) => (
             <section key={wk.n}>
               <div className="flex items-center gap-2 mb-2">
@@ -98,8 +108,15 @@ export default function Interview() {
                             <span className="grid place-items-center rounded-md w-6 h-6 shrink-0 mt-0.5 text-neon-amber" style={{ background: 'rgba(245,158,11,.12)', border: '1px solid rgba(245,158,11,.35)' }}><Mic size={13} /></span>
                             <div>
                               <div className="text-[11px] uppercase tracking-widest text-neon-amber font-semibold mb-1">Drill (say out loud)</div>
-                              <ul className="list-disc pl-4 space-y-0.5 text-white/70">
-                                {d.drill.map((q, k) => <li key={k}>{q}</li>)}
+                              <ul className="space-y-1.5 text-white/70">
+                                {d.drill.map((item, k) => (
+                                  <li key={k}>
+                                    <div className="flex gap-1.5"><span className="text-neon-amber shrink-0">›</span><span>{item.q}</span></div>
+                                    {showAnswers && (
+                                      <div className="ml-4 mt-1 text-white/60 text-[13px] border-l-2 border-neon-amber/30 pl-2.5">{item.a}</div>
+                                    )}
+                                  </li>
+                                ))}
                               </ul>
                             </div>
                           </div>
