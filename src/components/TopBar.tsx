@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Trophy, Volume2, VolumeX, RotateCcw, LogOut, Map, GraduationCap } from 'lucide-react'
+import { Home, Trophy, Volume2, VolumeX, RotateCcw, LogOut, Map, GraduationCap, Briefcase } from 'lucide-react'
 import XPBar from './XPBar'
 import StreakFlame from './StreakFlame'
 import { useProgress } from '../store/useProgress'
@@ -63,6 +63,13 @@ export default function TopBar() {
             title="Mock Exam"
           >
             <GraduationCap size={18} />
+          </Link>
+          <Link
+            to="/interview"
+            className={`btn-ghost !px-2.5 !py-2 ${loc.pathname.startsWith('/interview') ? '!bg-white/15 !text-white' : ''}`}
+            title="Interview Prep"
+          >
+            <Briefcase size={18} />
           </Link>
           <Link
             to="/achievements"

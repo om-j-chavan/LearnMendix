@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Flame, BookOpen, CheckCircle2, Trophy, Play, Lock, ArrowRight, Map, GraduationCap } from 'lucide-react'
+import { Flame, BookOpen, CheckCircle2, Trophy, Play, Lock, ArrowRight, Map, GraduationCap, Briefcase } from 'lucide-react'
 import { COURSES } from '../data/courses'
 import { MENDIX_PATHS, totalMendixPaths } from '../data/mendixPaths'
 import { useProgress } from '../store/useProgress'
@@ -10,7 +10,8 @@ import ProgressRing from '../components/ProgressRing'
 
 export default function Dashboard() {
   const nav = useNavigate()
-  const { xp, streak, doneLessons, quizBest, badges, lastVisited, examBest } = useProgress()
+  const { xp, streak, doneLessons, quizBest, badges, lastVisited, examBest, prepDays } = useProgress()
+  const prepDone = Object.keys(prepDays ?? {}).length
   const stats = computeStats({ xp, streak, doneLessons, quizBest, badges, examBest })
   const info = levelInfo(xp)
   const target = continueTarget(doneLessons, quizBest, lastVisited)
@@ -111,6 +112,19 @@ export default function Dashboard() {
           <p className="text-white/55 text-sm">Full exam simulation — 50 questions, 90-minute timer, 75% to pass. Weighted like the real Intermediate exam.</p>
         </div>
         <span className="btn-ghost shrink-0"><GraduationCap size={16} /> Start</span>
+      </Link>
+
+      {/* Interview prep */}
+      <Link to="/interview" className="glass card-hover p-5 flex items-center gap-4 group" style={{ display: 'flex', boxShadow: '0 0 24px rgba(236,72,153,.15)' }}>
+        <div className="grid place-items-center rounded-2xl w-14 h-14 shrink-0 text-3xl" style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(236,72,153,.5)' }}>💼</div>
+        <div className="flex-1">
+          <div className="font-display font-bold text-lg flex items-center gap-2">
+            Interview Prep
+            {prepDone > 0 && <span className="chip bg-neon-pink/15 text-neon-pink border border-neon-pink/30">{prepDone}/30 days</span>}
+          </div>
+          <p className="text-white/55 text-sm">A 30-day plan to land the job — daily learn/build/drill, topic bank, behavioral questions and your edge.</p>
+        </div>
+        <span className="btn-ghost shrink-0"><Briefcase size={16} /> Open</span>
       </Link>
 
       {/* Tracks */}

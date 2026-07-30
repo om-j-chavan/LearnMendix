@@ -74,6 +74,8 @@ export interface ProgressSnapshot {
   quizBest: Record<string, number>
   badges: Record<string, true>
   examBest: number
+  /** completed interview-prep days (optional so existing drafts stay valid) */
+  prepDays?: Record<number, true>
 }
 
 export interface Stats {
@@ -86,6 +88,7 @@ export interface Stats {
   lessonPct: number
   streak: number
   examBest: number
+  prepDone: number
 }
 
 export function computeStats(s: ProgressSnapshot): Stats {
@@ -105,6 +108,7 @@ export function computeStats(s: ProgressSnapshot): Stats {
     lessonPct: totalLessons ? doneCount / totalLessons : 0,
     streak: s.streak.count,
     examBest: s.examBest ?? 0,
+    prepDone: Object.keys(s.prepDays ?? {}).length,
   }
 }
 
@@ -134,6 +138,8 @@ export const BADGES: BadgeDef[] = [
   { id: 'level-10', name: 'Architect', desc: 'Reach level 10', icon: '🌟', accent: 'purple', earned: (s) => s.level >= 10 },
   { id: 'mock-pass', name: 'Exam Ready', desc: 'Pass a mock exam (75%+)', icon: '🎓', accent: 'lime', earned: (s) => s.examBest >= 75 },
   { id: 'mock-ace', name: 'Exam Ace', desc: 'Score 90%+ on a mock exam', icon: '🏆', accent: 'amber', earned: (s) => s.examBest >= 90 },
+  { id: 'prep-half', name: 'Halfway to Hired', desc: 'Finish 15 interview-prep days', icon: '💼', accent: 'cyan', earned: (s) => s.prepDone >= 15 },
+  { id: 'prep-done', name: 'Interview Ready', desc: 'Finish the 30-day interview plan', icon: '🎯', accent: 'pink', earned: (s) => s.prepDone >= 30 },
 ]
 
 export const BADGE_BY_ID = Object.fromEntries(BADGES.map((b) => [b.id, b])) as Record<string, BadgeDef>

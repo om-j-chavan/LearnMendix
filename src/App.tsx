@@ -11,6 +11,7 @@ import Achievements from './pages/Achievements'
 import Paths from './pages/Paths'
 import PathDetail from './pages/PathDetail'
 import Exam from './pages/Exam'
+import Interview from './pages/Interview'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/paths" element={<Paths />} />
         <Route path="/paths/:pathId" element={<PathDetail />} />
         <Route path="/exam" element={<Exam />} />
+        <Route path="/interview" element={<Interview />} />
         <Route path="/track/:levelId" element={<Track />} />
         <Route path="/module/:levelId/:moduleId" element={<ModulePage />} />
         <Route path="/lesson/:levelId/:moduleId/:lessonId" element={<Lesson />} />

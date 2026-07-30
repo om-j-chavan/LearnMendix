@@ -28,6 +28,7 @@ interface ProgressState extends ProgressSnapshot {
   completeLesson: (lessonId: string) => ActionResult
   submitQuiz: (moduleId: string, pct: number) => ActionResult & { passed: boolean; best: number }
   recordExam: (pct: number) => ActionResult & { passed: boolean; best: number }
+  togglePrepDay: (day: number) => ActionResult & { done: boolean }
   setLastVisited: (levelId: LevelId, moduleId: string) => void
   toggleSound: () => void
   resetProgress: () => void
@@ -40,6 +41,7 @@ const EMPTY: ProgressSnapshot & { sound: boolean; lastVisited: null } = {
   quizBest: {},
   badges: {},
   examBest: 0,
+  prepDays: {},
   sound: false,
   lastVisited: null,
 }
@@ -52,6 +54,7 @@ function snapshot(s: ProgressState): ProgressSnapshot {
     quizBest: s.quizBest,
     badges: s.badges,
     examBest: s.examBest,
+    prepDays: s.prepDays,
   }
 }
 
@@ -143,6 +146,27 @@ export const useProgress = create<ProgressState>()(
         return { xpGained, leveledFrom: from, leveledTo: to, newBadges, passed: pct >= PASS, best }
       },
 
+      togglePrepDay: (day) => {
+        const s = get()
+        const from = levelInfo(s.xp).level
+        const prep = { ...(s.prepDays ?? {}) }
+        if (prep[day]) {
+          delete prep[day]
+          set({ prepDays: prep })
+          return { xpGained: 0, leveledFrom: from, leveledTo: from, newBadges: [], done: false }
+        }
+        prep[day] = true
+        const xp = s.xp + XP_LESSON
+        const streak = nextStreak(s.streak)
+        const draft: ProgressSnapshot = { ...snapshot(s), xp, prepDays: prep, streak }
+        const newBadges = newlyEarnedBadges(draft)
+        const badges = { ...s.badges }
+        newBadges.forEach((b) => (badges[b.id] = true))
+        const to = levelInfo(xp).level
+        set({ xp, prepDays: prep, streak, badges })
+        return { xpGained: XP_LESSON, leveledFrom: from, leveledTo: to, newBadges, done: true }
+      },
+
       setLastVisited: (levelId, moduleId) => set({ lastVisited: { levelId, moduleId } }),
       toggleSound: () => set((s) => ({ sound: !s.sound })),
       resetProgress: () => set({ ...EMPTY, hydrated: true }),
@@ -157,6 +181,7 @@ export const useProgress = create<ProgressState>()(
         quizBest: s.quizBest,
         badges: s.badges,
         examBest: s.examBest,
+        prepDays: s.prepDays,
         sound: s.sound,
         lastVisited: s.lastVisited,
       }),
